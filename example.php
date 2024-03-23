@@ -24,10 +24,25 @@ $pointAmount = 0;
 
 $apiClient = new Parakolay($baseUrl, $apiKey, $apiSecret, $merchantNumber, $conversationId);
 
-if (!isset($_GET['return'])) {
-    $result = $apiClient->init3DS("CARD_NUMBER", "CARDHOLDER_NAME", "EXPIRE_MONTH (MM)", "EXPIRE_YEAR (YY)", "CVV", $amount, $pointAmount, "YOUR_CALLBACK_URL");
+if (isset($_GET['complete'])) {
+    $result = $apiClient->complete3DS();
+    print_r($result);
+} else if (isset($_GET['reverse'])) {
+    $result = $apiClient->Reverse("ORDER_ID");
+    print_r($result);
+} else if (isset($_GET['return'])) {
+    $result = $apiClient->Return($amount, "ORDER_ID");
+    print_r($result);
+} else if (isset($_GET['bininfo'])) {
+    $result = $apiClient->bin_info("BIN_NUMBER (First 6 or 8 digits)");
+    print_r($result);
+} else if (isset($_GET['installment'])) {
+    $result = $apiClient->Installment("BIN_NUMBER (First 6 or 8 digits)", $merchantNumber, $amount);
+    print_r($result);
+} else if (isset($_GET['pointInquiry'])) {
+    $result = $apiClient->GetPoints("CARD_NUMBER", "CARDHOLDER_NAME", "EXPIRE_MONTH (MM)", "EXPIRE_YEAR (YY)", "CVV");
     print_r($result);
 } else {
-    $result = $apiClient->complete3DS();
+    $result = $apiClient->init3DS("CARD_NUMBER", "CARDHOLDER_NAME", "EXPIRE_MONTH (MM)", "EXPIRE_YEAR (YY)", "CVV", $amount, $pointAmount, "http://localhost:8888/parakolay_sdk/example.php?complete=true");
     print_r($result);
 }

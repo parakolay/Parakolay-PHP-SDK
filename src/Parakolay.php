@@ -9,7 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 
 class Parakolay
 {
-    private $version = "v1.0";
+    private $version = "v1.0.1";
 
     private $multipartClient;
     private $jsonClient;
@@ -80,6 +80,14 @@ class Parakolay
             return $this->provision();
         else
             return false;
+    }
+
+    public function getPoints($cardNumber, $cardholderName, $expireMonth, $expireYear, $cvc)
+    {
+        $this->cardToken = $this->getCardToken($cardNumber, $cardholderName, $expireMonth, $expireYear, $cvc);
+        $pointResult = $this->point_inquiry($this->cardToken);
+
+        return $pointResult;
     }
 
     private function getCardToken($cardNumber, $cardholderName, $expireMonth, $expireYear, $cvc)
@@ -282,6 +290,116 @@ class Parakolay
                 unset($_SESSION['cardToken']);
                 unset($_SESSION['amount']);
 
+                return $decodedResponse;
+            } else
+                return ['error' => $decodedResponse->errorMessage];
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function reverse($orderid, $languageCode = "TR")
+    {
+        $data = array(
+            'orderid' => $orderid,
+            'languageCode' => $languageCode,
+        );
+
+        try {
+            $response = $this->jsonClient->request('POST', '/v1/Payments/reverse', [
+                'json' => $data
+            ]);
+
+            $decodedResponse = json_decode($response->getBody()->getContents());
+
+            if ($this->checkError($decodedResponse)) {
+                return $decodedResponse;
+            } else
+                return ['error' => $decodedResponse->errorMessage];
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function return($amount, $orderid, $languageCode = "TR")
+    {
+        $data = array(
+            'amount' => $amount,
+            'orderid' => $orderid,
+            'languageCode' => $languageCode,
+        );
+
+        try {
+            $response = $this->jsonClient->request('POST', '/v1/Payments/return', [
+                'json' => $data
+            ]);
+
+            $decodedResponse = json_decode($response->getBody()->getContents());
+
+            if ($this->checkError($decodedResponse)) {
+                return $decodedResponse;
+            } else
+                return ['error' => $decodedResponse->errorMessage];
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function bin_info($binNumber, $languageCode = "TR")
+    {
+        $data = array(
+            'binNumber' => $binNumber,
+            'languageCode' => $languageCode,
+        );
+
+        try {
+            $response = $this->jsonClient->request('POST', '/v1/Payments/bin-information', [
+                'json' => $data
+            ]);
+
+            $decodedResponse = json_decode($response->getBody()->getContents());
+
+            if ($this->checkError($decodedResponse)) {
+                return $decodedResponse;
+            } else
+                return ['error' => $decodedResponse->errorMessage];
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function installment($binNumber, $merchantNumber, $amount)
+    {
+        try {
+            $response = $this->jsonClient->request('GET', '/v1/Installment?binNumber=' . $binNumber . '&amount=' . $amount . '&merchantNumber=' . $merchantNumber);
+
+            $decodedResponse = json_decode($response->getBody()->getContents());
+
+            if ($this->checkError($decodedResponse)) {
+                return $decodedResponse;
+            } else
+                return ['error' => $decodedResponse->errorMessage];
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    private function point_inquiry($cardToken, $languageCode = "TR", $currency = "TRY")
+    {
+        $data = array(
+            'cardToken' => $cardToken,
+            'languageCode' => $languageCode,
+            'currency' => $currency,
+        );
+
+        try {
+            $response = $this->jsonClient->request('POST', '/v1/Payments/pointInquiry', [
+                'json' => $data
+            ]);
+
+            $decodedResponse = json_decode($response->getBody()->getContents());
+
+            if ($this->checkError($decodedResponse)) {
                 return $decodedResponse;
             } else
                 return ['error' => $decodedResponse->errorMessage];
