@@ -9,7 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 
 class Parakolay
 {
-    private $version = "v1.0.1";
+    private $version = "v1.0.2";
 
     private $multipartClient;
     private $jsonClient;
@@ -22,6 +22,7 @@ class Parakolay
     private $signature;
 
     private $amount;
+    private $installmentCount;
     private $currency;
     private $cardholderName;
     private $cardToken;
@@ -57,10 +58,10 @@ class Parakolay
         ]);
     }
 
-    public function init3DS($cardNumber, $cardholderName, $expireMonth, $expireYear, $cvc, $amount, $pointAmout, $callbackURL, $currency = "TRY", $languageCode = "TR")
+    public function init3DS($cardNumber, $cardholderName, $expireMonth, $expireYear, $cvc, $amount, $pointAmout, $installmentCount, $callbackURL, $currency = "TRY", $languageCode = "TR")
     {
         $this->cardToken = $this->getCardToken($cardNumber, $cardholderName, $expireMonth, $expireYear, $cvc);
-        $this->threeDSessionID = $this->get3DSession($amount, $pointAmout, $currency, $languageCode);
+        $this->threeDSessionID = $this->get3DSession($amount, $pointAmout, $installmentCount, $currency, $languageCode);
         $threedDinitResult = $this->get3DInit($callbackURL, $languageCode);
 
         $_SESSION['cardholderName'] = $cardholderName;
@@ -69,6 +70,7 @@ class Parakolay
         $_SESSION['currency'] = $this->currency;
         $_SESSION['cardToken'] = $this->cardToken;
         $_SESSION['amount'] = $this->amount;
+        $_SESSION['installmentCount'] = $this->installmentCount;
 
         return $threedDinitResult;
     }
@@ -133,7 +135,7 @@ class Parakolay
             ],
             [
                 'name' => 'CardHolderName',
-                'contents' => $cardholderName
+                'contents' => $this->cardholderName
             ]
         ];
 
@@ -153,9 +155,10 @@ class Parakolay
         }
     }
 
-    private function get3DSession($amount, $pointAmout, $currency, $languageCode)
+    private function get3DSession($amount, $pointAmout, $installmentCount, $currency, $languageCode)
     {
         $this->amount = $amount;
+        $this->installmentCount = $installmentCount;
         $this->currency = $currency;
 
         $data = array(
@@ -164,7 +167,7 @@ class Parakolay
             'cardToken' => $this->cardToken,
             'currency' => $currency,
             'paymentType' => "Auth",
-            'installmentCount' => 1,
+            'installmentCount' => $this->installmentCount,
             'languageCode' => $languageCode
         );
 
@@ -222,6 +225,10 @@ class Parakolay
             [
                 'name' => 'MerchantNumber',
                 'contents' => $this->merchantNumber
+            ],
+            [
+                'name' => 'CardHolderName',
+                'contents' => $this->cardholderName
             ]
         ];
 
@@ -272,6 +279,7 @@ class Parakolay
             'currency' => $_SESSION['currency'],
             'paymentType' => 'Auth',
             'cardHolderName' => $_SESSION['cardholderName'],
+            'installmentCount' => $_SESSION['installmentCount'],
             "threeDSessionId" => $_SESSION['threeDSessionId'],
         );
 

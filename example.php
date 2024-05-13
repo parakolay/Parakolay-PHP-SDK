@@ -20,6 +20,7 @@ $baseUrl = 'https://api.parakolay.com';
 $testUrl = 'https://api-test.parakolay.com';
 
 $amount = 1;
+$installmentCount = 7;
 $pointAmount = 0;
 
 $apiClient = new Parakolay($baseUrl, $apiKey, $apiSecret, $merchantNumber, $conversationId);
@@ -43,6 +44,6 @@ if (isset($_GET['complete'])) {
     $result = $apiClient->GetPoints("CARD_NUMBER", "CARDHOLDER_NAME", "EXPIRE_MONTH (MM)", "EXPIRE_YEAR (YY)", "CVV");
     print_r($result);
 } else {
-    $result = $apiClient->init3DS("CARD_NUMBER", "CARDHOLDER_NAME", "EXPIRE_MONTH (MM)", "EXPIRE_YEAR (YY)", "CVV", $amount, $pointAmount, "http://localhost:8888/parakolay_sdk/example.php?complete=true");
+    $result = $apiClient->init3DS("CARD_NUMBER", "CARDHOLDER_NAME", "EXPIRE_MONTH (MM)", "EXPIRE_YEAR (YY)", "CVV", $amount, $pointAmount, $installmentCount, "http://localhost:8888/parakolay_sdk/example.php?complete=true");
     print_r($result);
 }
